@@ -1,4 +1,6 @@
 import pytest
+from datetime import date, timedelta, datetime
+from random import randint, choice, randrange
 
 class Event():
     def __init__(self, available_tickets: int, id = 1):
@@ -40,7 +42,6 @@ class TestEvent():
                     event.check_availability(seats_requested)
             case 2:
                 event.check_availability(seats_requested) == expected
-
 
 
 def calc_price(base_price: float, discount: float, count: int) -> float:
@@ -88,3 +89,53 @@ def test_calc_price(base_price, discount, count, expected):
     else:
         assert calc_price(base_price, discount, count) == expected
     
+class PromoCode():
+    def __init__(self, date: date, counter: int, valid: bool):
+        self.is_valid = valid
+        self.works_until = datetime.strptime(date, '%Y-%m-%d').date()
+        self.availability_counter = counter
+    
+    def apply_promocode(self) -> bool:
+        if (
+            self.is_valid == False or
+            self.works_until < date.today() or
+            self.availability_counter <= 0
+        ):
+            return False
+        self.availability_counter -= 1
+        if self.availability_counter <= 0:
+            self.is_valid = False
+        return True
+    
+class TestPromocode():
+    def get_rand_date(start_year=2024, end_year=2026):
+        delta_days = (date(end_year, 12, 31) - date(start_year, 1, 1)).days
+        random_days = randrange(delta_days + 1)
+        return date(start_year, 1, 1) + timedelta(random_days)
+    
+    # def __init__(self):
+    #     self.promocodeStorage = {}
+
+    #     for _ in range(20):
+    #         self.promocodeStorage[str(uuid.uuid1())] = PromoCode(
+    #             date=self.get_rand_date(), 
+    #             counter=randint(0, 10), 
+    #             valid=choice([True, False])
+    #         )
+
+    #     self.promocodeStorage['ee21cb76-3005-11f0-a671-803253436fb5'] = PromoCode(
+    #         date=self.get_rand_date(), 
+    #         counter=randint(0, 10), 
+    #         valid=choice([True, False])
+    #     )
+
+    @pytest.mark.parametrize(
+            "date, counter, valid, expected",
+            ['2025-10-12', 3, True, True],
+            ['2025-10-12', 3, False, False],
+            ['2025-10-12', 0, True, False],
+            ['2025-01-12', 3, True, True],
+    )
+    def test_apply_promocode(date, counter, valid, expected):
+        promo = PromoCode(date, counter, valid)
+        assert promo.apply_promocode() == expected
