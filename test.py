@@ -1,7 +1,7 @@
 # import uuid
-from datetime import date
+# from datetime import date
 
-print(date.today() == date('2025-05-13'))
+# print(date.today() == date('2025-05-13'))
 
 # print(str(uuid.uuid1()))
 
@@ -12,3 +12,9 @@ print(date.today() == date('2025-05-13'))
 
 # if '1' not in test:
 #     print('no')
+
+import hashlib
+data = "Hello, Python!"
+hash_object = hashlib.md5(data.encode())
+md5_hash = hash_object.hexdigest()
+print(md5_hash)

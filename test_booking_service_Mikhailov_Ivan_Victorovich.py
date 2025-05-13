@@ -1,6 +1,8 @@
 import pytest
 from datetime import date, timedelta, datetime
 from random import randint, choice, randrange
+import uuid
+import hashlib
 
 class Event():
     def __init__(self, available_tickets: int, id = 1):
@@ -131,11 +133,47 @@ class TestPromocode():
 
     @pytest.mark.parametrize(
             "date, counter, valid, expected",
-            ['2025-10-12', 3, True, True],
-            ['2025-10-12', 3, False, False],
-            ['2025-10-12', 0, True, False],
-            ['2025-01-12', 3, True, True],
+            [
+                ('2025-10-12', 3, True, True),
+                ('2025-10-12', 3, False, False),
+                ('2025-10-12', 0, True, False),
+                ('2025-01-12', 3, True, False),
+            ]
     )
-    def test_apply_promocode(date, counter, valid, expected):
+    def test_apply_promocode(self, date, counter, valid, expected):
         promo = PromoCode(date, counter, valid)
         assert promo.apply_promocode() == expected
+
+def generate_booking_ref(user_id: int, event_id: int):
+    if (
+        not isinstance(user_id, int) or
+        not isinstance(event_id, int)
+    ):
+        raise TypeError
+    else:
+        data = str(user_id) + str(event_id)
+        hash_object = hashlib.md5(data.encode())
+        md5_hash = hash_object.hexdigest()
+        return md5_hash + str(uuid.uuid1())
+
+@pytest.mark.parametrize(
+    "mark, user_id, event_id, expected",
+    [
+        (1, '12', 13, TypeError),
+        (2, 12, 13, True),
+    ]    
+)    
+def test_generate_booking_ref(mark, user_id, event_id, expected):
+    match mark:
+        case 1:
+            with pytest.raises(expected):
+                generate_booking_ref(user_id, event_id)
+        case 2:
+            ref1 = generate_booking_ref(user_id, event_id)
+            ref2 = generate_booking_ref(user_id, event_id)
+            assert (ref1 != ref2) == expected
+
+def mock_email(email: str) -> bool:
+    if not isinstance(email, str):
+        raise TypeError
+    return choice[True, False]
